@@ -39,39 +39,31 @@ function updateButtonStates() {
 // Function to start the timer
 startButton.addEventListener("click", function() {
   chrome.runtime.sendMessage({ type: "startTimer" });
-  isTimerRunning = true;
-  isTimerPaused = false;
-  updateButtonStates();
 });
 
 // Function to pause the timer
 pauseButton.addEventListener("click", function() {
   chrome.runtime.sendMessage({ type: "pauseTimer" });
-  isTimerPaused = true;
-  isTimerRunning = false;
-  updateButtonStates();
 });
 
 // Function to resume the timer
 resumeButton.addEventListener("click", function() {
   chrome.runtime.sendMessage({ type: "resumeTimer" });
-  isTimerPaused = false;
-  isTimerRunning = true;
-  updateButtonStates();
 });
 
 // Function to reset the timer
 resetButton.addEventListener("click", function() {
   chrome.runtime.sendMessage({ type: "resetTimer" });
-  isTimerRunning = false;
-  isTimerPaused = false;
-  updateButtonStates();
 });
 
 // Listen for timer updates from background script
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   if (message.type === "updateTimer") {
     timerElement.textContent = message.time;
+  } else if (message.type === "timerStateChanged") {
+    isTimerRunning = message.isRunning;
+    isTimerPaused = message.isPaused;
+    updateButtonStates();
   }
 });
 
@@ -81,13 +73,26 @@ saveScheduleButton.addEventListener("click", function() {
   const endTime = endTimeInput.value;
 
   if (startTime && endTime) {
-    chrome.storage.local.set({ startTime, endTime }, function() {
-      alert("Schedule saved!");
-    });
+    updateSchedule(startTime, endTime);
   } else {
     alert("Please set both a start and end time.");
   }
 });
+
+// Function to update schedule
+function updateSchedule(startTime, endTime) {
+  chrome.runtime.sendMessage({
+    type: "updateSchedule",
+    startTime: startTime,
+    endTime: endTime
+  }, function(response) {
+    if (response && response.success) {
+      alert("Schedule saved!");
+    } else {
+      alert("Failed to save schedule. Please try again.");
+    }
+  });
+}
 
 // Theme toggle
 themeToggle.addEventListener("change", function() {
@@ -124,15 +129,23 @@ function detectSystemTheme() {
 
 // Load initial theme, timer state, and saved schedule times
 window.addEventListener("load", function() {
+  console.log("Popup window loaded");
   detectSystemTheme();
   chrome.runtime.sendMessage({ type: "getTimerState" }, function(response) {
-    isTimerRunning = response.isTimerRunning;
-    isTimerPaused = !isTimerRunning && response.elapsedTime > 0;
-    updateButtonStates();
+    console.log("Received timer state:", response);
+    if (response) {
+      isTimerRunning = response.isTimerRunning;
+      isTimerPaused = !isTimerRunning && response.elapsedTime > 0;
+      updateButtonStates();
+      if (response.currentTime) {
+        timerElement.textContent = response.currentTime;
+      }
+    }
   });
 
   // Load saved schedule times
   chrome.storage.local.get(["startTime", "endTime"], function(result) {
+    console.log("Loaded saved schedule:", result);
     if (result.startTime) startTimeInput.value = result.startTime;
     if (result.endTime) endTimeInput.value = result.endTime;
   });
