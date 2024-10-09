@@ -144,6 +144,6 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.commands.onCommand.addListener((command) => {
     if (command === "activate_extension") {
         console.log("Extension Activated"); // Log for debugging
-        chrome.action.openPopup(); // Open the extension popup
+        chrome.action.openPopup(); 
     }
 });

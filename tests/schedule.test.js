@@ -2,7 +2,7 @@ const { saveSchedule, getSchedule, isTimeInSchedule } = require('./schedule');
 
 describe('Schedule functionality', () => {
   beforeEach(() => {
-    // Mock chrome.storage.local
+    // mock chrome.storage.local
     global.chrome = {
       storage: {
         local: {

@@ -37,11 +37,8 @@ function executeTwentyTwentyTwentyRule() {
 // Listen for changes to the eye protection state
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.type === "enableEyeProtection") {
-        // Logic to enable eye protection, e.g., apply some styles or modify content
         executeTwentyTwentyTwentyRule();
     } else if (message.type === "disableEyeProtection") {
-        // Logic to disable eye protection
-        // This could involve reverting any changes made by the 20-20-20 rule
     }
 });
 
